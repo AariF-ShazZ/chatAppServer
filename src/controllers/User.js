@@ -32,16 +32,23 @@ const login = async (req,res) => {
     const {email,password} = req.body
     try{
         const user = await UserModel.findOne({email})
-        if(!user) return   res.status(400).json({ message:"Invalid Credentials!"})
+        if(!user) return   res.status(400).json({ message:"User does not exist." })
 
-        bcrypt.compare(password, user.password, async (err,result) => {
-            if(err){
-                res.send({ message:"Invalid Credentials!"});
-            }else {
-                var token = jwt.sign({_id:user._id}, process.env.key);
-                res.status(200).json({user:user,token:token})
-            }
-        })
+        // bcrypt.compare(password, user.password, async (err,result) => {
+        //     if(err){
+        //         res.send({ message:"Invalid Credentials!"});
+        //     }else {
+        //         var token = jwt.sign({_id:user._id}, process.env.key);
+        //         res.status(200).json({user:user,token:token})
+        //     }
+        // })
+
+        // if (!user) return res.status(400).json({ msg: "User does not exist. " })
+        const isMatch = await bcrypt.compare(password, user.password)
+    
+        if (!isMatch) return res.status(400).json({ msg: "Invalid credentials. " })
+        const token = jwt.sign({ id: user._id }, process.env.key)
+        res.status(200).json({user:user,token:token})
 
     }catch(err){
         res.status(500).send({"message": "Something went wrong","error":err} )
